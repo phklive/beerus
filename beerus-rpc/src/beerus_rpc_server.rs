@@ -1,5 +1,8 @@
 use beerus_core::lightclient::beerus::BeerusLightClient;
-use ethers::types::Transaction;
+use ethers::{
+    types::{Address, Transaction},
+    utils,
+};
 use helios::types::{BlockTag, ExecutionBlock};
 /// The RPC module for the Ethereum protocol required by Kakarot.
 use jsonrpsee::{
@@ -54,7 +57,7 @@ trait BeerusApi {
 
     // // Returns an object with data about the sync status or false
     // #[method(name = "eth_syncing")]
-    // async fn eth_syncing(&self) -> Result<bool>;
+    // async fn eth_syncing(&self) -> Result<SyncingStatus>;
 
     // // Returns the client coinbase address
     // #[method(name = "eth_coinbase")]
@@ -148,9 +151,9 @@ trait BeerusApi {
     // #[method(name = "eth_signTransaction")]
     // async fn eth_signTransaction(&self) -> Result<bool>;
 
-    // // Returns the balance of the account of given address
-    // #[method(name = "eth_getBalance")]
-    // async fn eth_getBalance(&self) -> Result<bool>;
+    // Returns the balance of the account of given address
+    #[method(name = "eth_getBalance")]
+    async fn eth_get_balance(&self, address: &str) -> Result<String>;
 
     // // Returns the value from a storage position at given address
     // #[method(name = "eth_getStorageAt")]
@@ -313,6 +316,32 @@ impl BeerusApiServer for BeerusRpc {
             .chain_id()
             .await;
         Ok(chain_id)
+    }
+
+    // // TODO: Implement syncing on ethereum lightclient
+    // async fn eth_syncing(&self) -> Result<SyncingStatus> {
+    //     let syncing = self._beerus.ethereum_lightclient.read().await
+    // }
+
+    async fn eth_get_balance(&self, address: &str) -> Result<String> {
+        // Parse the Ethereum address.
+        let addr = Address::from_str(address).unwrap();
+        // TODO: Make the block tag configurable.
+        let block = BlockTag::Latest;
+        // Query the balance of the Ethereum address.
+        let balance = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_balance(&addr, block)
+            .await
+            .unwrap();
+
+        // Format the balance in Ether.
+        let balance_in_eth = utils::format_units(balance, "ether").unwrap();
+
+        Ok(balance_in_eth)
     }
 
     async fn eth_block_number(&self) -> Result<u64> {
