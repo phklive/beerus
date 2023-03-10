@@ -3,7 +3,7 @@ use ethers::{
     types::{Address, Transaction},
     utils,
 };
-use helios::types::{BlockTag, ExecutionBlock};
+use helios::types::{BlockTag, CallOpts, ExecutionBlock};
 /// The RPC module for the Ethereum protocol required by Kakarot.
 use jsonrpsee::{
     core::{async_trait, RpcResult as Result},
@@ -61,7 +61,7 @@ trait BeerusApi {
 
     // // Returns the client coinbase address
     // #[method(name = "eth_coinbase")]
-    // async fn eth_coinbase(&self) -> Result<bool>;
+    // async fn eth_coinbase(&self) -> Result<Address>;
 
     // // Returns a list of addresses owned by client
     // #[method(name = "eth_accounts")]
@@ -71,25 +71,26 @@ trait BeerusApi {
     #[method(name = "eth_blockNumber")]
     async fn eth_block_number(&self) -> Result<u64>;
 
+    // TODO: impliment
     // // Executes a new message call immediately without creating a transaction on the blockchain
     // #[method(name = "eth_call")]
-    // async fn eth_call(&self) -> Result<bool>;
+    // async fn eth_call(&self, opts: CallOpts, block_tag: &str) -> Result<String>;
 
-    // // Generates and returns an estimate of how much gas is necessary to allow the transaction to complete
-    // #[method(name = "eth_estimateGas")]
-    // async fn eth_estimateGas(&self) -> Result<bool>;
+    // Generates and returns an estimate of how much gas is necessary to allow the transaction to complete
+    #[method(name = "eth_estimateGas")]
+    async fn eth_estimate_gas(&self, opts: CallOpts) -> Result<String>;
 
     // // Generates an access list for a transaction
     // #[method(name = "eth_createAccessList")]
     // async fn eth_createAccessList(&self) -> Result<bool>;
 
-    // // Returns the current price per gas in wei
-    // #[method(name = "eth_gasPrice")]
-    // async fn eth_gasPrice(&self) -> Result<bool>;
+    // Returns the current price per gas in wei
+    #[method(name = "eth_gasPrice")]
+    async fn eth_gas_price(&self) -> Result<String>;
 
-    // // Returns the current maxPriorityFeePerGas per gas in wei
-    // #[method(name = "eth_maxPriorityFeePerGas")]
-    // async fn eth_maxPriorityFeePerGas(&self) -> Result<bool>;
+    // Returns the current maxPriorityFeePerGas per gas in wei
+    #[method(name = "eth_maxPriorityFeePerGas")]
+    async fn eth_max_priority_fee_per_gas(&self) -> Result<String>;
 
     // // Transaction fee history
     // #[method(name = "eth_feeHistory")]
@@ -159,13 +160,13 @@ trait BeerusApi {
     // #[method(name = "eth_getStorageAt")]
     // async fn eth_getStorageAt(&self) -> Result<bool>;
 
-    // // Returns the number of transactions sent from an address
-    // #[method(name = "eth_getTransactionCount")]
-    // async fn eth_getTransactionCount(&self) -> Result<bool>;
+    // Returns the number of transactions sent from an address
+    #[method(name = "eth_getTransactionCount")]
+    async fn eth_get_transaction_count(&self, address: &str) -> Result<u64>;
 
-    // // Returns code at given address
-    // #[method(name = "eth_getCode")]
-    // async fn eth_getCode(&self) -> Result<bool>;
+    // Returns code at given address
+    #[method(name = "eth_getCode")]
+    async fn eth_get_code(&self, address: &str) -> Result<Vec<u8>>;
 
     // // Returns the meerkle proof for a given account and optionally some storage keys
     // #[method(name = "eth_getProof")]
@@ -222,16 +223,6 @@ trait BeerusApi {
     // // Returns an array of recent bad blocks that the client has seen on the network
     // #[method(name = "debug_getBadBlocks")]
     // async fn debug_getBadBlocks(&self) -> Result<bool>;
-
-    // Starknet methods
-
-    // Return the currently configured Starknet chain id
-    #[method(name = "stark_chainId")]
-    async fn stark_chain_id(&self) -> Result<String>;
-
-    // Get the most recent accepted block number
-    #[method(name = "stark_blockNumber")]
-    async fn stark_block_number(&self) -> Result<u64>;
 }
 
 #[async_trait]
@@ -297,10 +288,10 @@ impl BeerusApiServer for BeerusRpc {
         Ok(block_transaction_count)
     }
 
-    // // TODO: Implement get_uncle_by_block_number on ethereum lightclient
-    // async fn eth_get_uncle_count_by_block_number(&self, block_tag: &str) -> Result<u64> {
-    //     let block_tag: String = serde_json::to_string(&block_tag).unwrap();
-    //     let block_tag: BlockTag = serde_json::from_str(block_tag.as_str()).unwrap();
+    // // TODO: implement coinbase on ethereum lightclient
+    // async fn eth_coinbase(&self) -> Result<Address> {
+    //     let coinbase = self._beerus.ethereum_lightclient.read().await;
+    //     Ok(coinbase)
     // }
 
     // // TODO: impliment syncing on ethereum lightclient
@@ -342,6 +333,93 @@ impl BeerusApiServer for BeerusRpc {
         let balance_in_eth = utils::format_units(balance, "ether").unwrap();
 
         Ok(balance_in_eth)
+    }
+
+    async fn eth_get_transaction_count(&self, address: &str) -> Result<u64> {
+        // Parse the Ethereum address.
+        let addr = Address::from_str(address).unwrap();
+        // TODO: Make the block tag configurable.
+        let block = BlockTag::Latest;
+        // Query the balance of the Ethereum address.
+        let nonce = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_nonce(&addr, block)
+            .await
+            .unwrap();
+        Ok(nonce)
+    }
+
+    // TODO: impliment
+    // async fn eth_call(&self, opts: CallOpts, block_tag: &str) -> Result<String> {
+    //     let block_tag: String = serde_json::to_string(&block_tag).unwrap();
+    //     let block_tag: BlockTag = serde_json::from_str(block_tag.as_str()).unwrap();
+    //     let call = self
+    //         ._beerus
+    //         .ethereum_lightclient
+    //         .read()
+    //         .await
+    //         .call(&opts, block_tag)
+    //         .await
+    //         .unwrap();
+    //     Ok(call)
+    // }
+
+    async fn eth_get_code(&self, address: &str) -> Result<Vec<u8>> {
+        // Parse the Ethereum address.
+        let addr = Address::from_str(address).unwrap();
+        // TODO: Make the block tag configurable.
+        let block = BlockTag::Latest;
+        let code = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_code(&addr, block)
+            .await
+            .unwrap();
+        Ok(code)
+    }
+
+    async fn eth_gas_price(&self) -> Result<String> {
+        let gas_price = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_gas_price()
+            .await
+            .unwrap()
+            .to_string();
+        Ok(gas_price)
+    }
+
+    async fn eth_estimate_gas(&self, opts: CallOpts) -> Result<String> {
+        let gas = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .estimate_gas(&opts)
+            .await
+            .unwrap()
+            .to_string();
+        Ok(gas)
+    }
+
+    async fn eth_max_priority_fee_per_gas(&self) -> Result<String> {
+        let max_fee = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_priority_fee()
+            .await
+            .unwrap()
+            .to_string();
+        Ok(max_fee)
     }
 
     async fn eth_block_number(&self) -> Result<u64> {
@@ -418,28 +496,6 @@ impl BeerusApiServer for BeerusRpc {
         };
 
         Ok(transactions[index as usize].clone())
-    }
-
-    // Starknet functions
-    async fn stark_chain_id(&self) -> Result<String> {
-        let chain_id = self
-            ._beerus
-            .starknet_lightclient
-            .chain_id()
-            .await
-            .unwrap()
-            .to_string();
-        Ok(chain_id)
-    }
-
-    async fn stark_block_number(&self) -> Result<u64> {
-        let block_number = self
-            ._beerus
-            .starknet_lightclient
-            .block_number()
-            .await
-            .unwrap();
-        Ok(block_number)
     }
 }
 
