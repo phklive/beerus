@@ -1,5 +1,7 @@
 use async_trait::async_trait;
-use ethers::types::{Address, BlockNumber, Filter, Log, Topic, Transaction, H256, U256};
+use ethers::types::{
+    Address, BlockNumber, Filter, Log, SyncingStatus, Topic, Transaction, H256, U256,
+};
 use eyre::{eyre, Result};
 use helios::client::{Client, ClientBuilder, FileDB};
 use helios::types::{BlockTag, CallOpts, ExecutionBlock};
@@ -111,6 +113,14 @@ impl EthereumLightClient for HeliosLightClient {
             .await
     }
 
+    async fn get_syncing(&self) -> Result<SyncingStatus> {
+        self.helios_light_client.syncing().await
+    }
+
+    async fn get_coinbase(&self) -> Result<Address> {
+        self.helios_light_client.get_coinbase().await
+    }
+
     async fn get_logs(
         &self,
         from_block: &Option<String>,
@@ -140,7 +150,7 @@ impl EthereumLightClient for HeliosLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: starknet_core_contract_address,
+            to: Some(starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,
@@ -172,7 +182,7 @@ impl EthereumLightClient for HeliosLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: starknet_core_contract_address,
+            to: Some(starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,

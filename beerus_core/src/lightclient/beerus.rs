@@ -319,7 +319,7 @@ impl BeerusLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: self.starknet_core_contract_address,
+            to: Some(self.starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,
@@ -359,7 +359,7 @@ impl BeerusLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: self.starknet_core_contract_address,
+            to: Some(self.starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,
@@ -399,7 +399,7 @@ impl BeerusLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: self.starknet_core_contract_address,
+            to: Some(self.starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,
@@ -434,7 +434,7 @@ impl BeerusLightClient {
         // Build the call options.
         let call_opts = CallOpts {
             from: None,
-            to: self.starknet_core_contract_address,
+            to: Some(self.starknet_core_contract_address),
             gas: None,
             gas_price: None,
             value: None,

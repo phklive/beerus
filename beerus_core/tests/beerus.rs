@@ -1061,7 +1061,7 @@ mod tests {
 
         let call_opts = CallOpts {
             from: Some(Address::from_low_u64_be(0)),
-            to: Address::from_low_u64_be(1),
+            to: Some(Address::from_low_u64_be(1)),
             gas: Some(U256::from(10_u64)),
             gas_price: Some(U256::from(10_u64)),
             value: Some(U256::from(10_u64)),
@@ -1107,7 +1107,7 @@ mod tests {
         let expected_error = "ethereum_lightclient_error";
         let call_opts = CallOpts {
             from: Some(Address::from_low_u64_be(0)),
-            to: Address::from_low_u64_be(1),
+            to: Some(Address::from_low_u64_be(1)),
             gas: Some(U256::from(10_u64)),
             gas_price: Some(U256::from(10_u64)),
             value: Some(U256::from(10_u64)),

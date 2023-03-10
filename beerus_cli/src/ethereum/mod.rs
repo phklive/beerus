@@ -297,7 +297,7 @@ pub async fn query_estimate_gas(
             .from
             .as_ref()
             .and_then(|v| Address::from_str(v).ok()),
-        to: Address::from_str(&transaction_object.to)?,
+        to: Some(Address::from_str(&transaction_object.to)?),
         value: transaction_object
             .value
             .as_ref()

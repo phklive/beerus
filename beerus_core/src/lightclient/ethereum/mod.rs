@@ -1,7 +1,7 @@
 pub mod helios_lightclient;
 
 use async_trait::async_trait;
-use ethers::types::{Address, Log, Transaction, H256, U256};
+use ethers::types::{Address, Log, SyncingStatus, Transaction, H256, U256};
 use eyre::Result;
 use helios::types::{BlockTag, CallOpts, ExecutionBlock};
 use mockall::automock;
@@ -183,6 +183,26 @@ pub trait EthereumLightClient: Send + Sync {
     /// # TODO
     /// Add examples.
     async fn get_priority_fee(&self) -> Result<U256>;
+
+    /// Get an object with data about the sync status or false
+    /// This function should be called after `start`.
+    /// # Returns
+    /// SyncingStatus
+    /// # Errors
+    /// If the call fails.
+    /// # TODO
+    /// Add examples.
+    async fn get_syncing(&self) -> Result<SyncingStatus>;
+
+    /// Get the clients coinbase address
+    /// This function should be called after `start`.
+    /// # Returns
+    /// Address
+    /// # Errors
+    /// If the call fails.
+    /// # TODO
+    /// Add examples.
+    async fn get_coinbase(&self) -> Result<Address>;
 
     /// Get information about a block by block number.
     /// This function should be called after `start`.
