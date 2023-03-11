@@ -2,15 +2,14 @@ use crate::api::ethereum::resp::{
     QueryBalanceResponse, QueryBlockByHashResponse, QueryBlockByNumberResponse,
     QueryBlockNumberResponse, QueryBlockTxCountByBlockHashResponse,
     QueryBlockTxCountByBlockNumberResponse, QueryChainIdResponse, QueryCodeResponse,
-    QueryEstimateGasResponse, QueryGasPriceResponse, QueryLogsObject, QueryLogsResponse,
-    QueryNonceResponse, QueryPriorityFeeResponse, QueryTransactionByHashResponse,
-    QueryTxCountResponse, ResponseLog, SendRawTransactionResponse, TransactionObject,
+    QueryEstimateGasResponse, QueryGasPriceResponse, QueryNonceResponse, QueryPriorityFeeResponse,
+    QueryTransactionByHashResponse, QueryTxCountResponse, SendRawTransactionResponse,
+    TransactionObject,
 };
 use crate::api::ApiResponse;
 
 use beerus_core::lightclient::beerus::BeerusLightClient;
 
-use ethers::types::Filter;
 use ethers::{
     types::{Address, H256, U256},
     utils,
