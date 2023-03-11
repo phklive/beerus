@@ -1,7 +1,9 @@
 pub mod helios_lightclient;
 
 use async_trait::async_trait;
-use ethers::types::{Address, Log, SyncingStatus, Transaction, H256, U256};
+use ethers::types::{
+    Address, Filter, Log, SyncingStatus, Transaction, TransactionReceipt, H160, H256, U256,
+};
 use eyre::Result;
 use helios::types::{BlockTag, CallOpts, ExecutionBlock};
 use mockall::automock;
@@ -46,6 +48,30 @@ pub trait EthereumLightClient: Send + Sync {
     /// # TODO
     /// Add examples.
     async fn send_raw_transaction(&self, bytes: &[u8]) -> Result<H256>;
+
+    /// Send Raw Transaction
+    /// This function should be called after `start`.
+    /// # Arguments
+    /// * `bytes` - Transaction Bytes.
+    /// # Returns
+    /// The balance of the account.
+    /// # Errors
+    /// If the call fails.
+    /// # TODO
+    /// Add examples.
+    async fn get_transaction_receipt(&self, tx_hash: &H256) -> Result<Option<TransactionReceipt>>;
+
+    /// Send Raw Transaction
+    /// This function should be called after `start`.
+    /// # Arguments
+    /// * `bytes` - Transaction Bytes.
+    /// # Returns
+    /// The balance of the account.
+    /// # Errors
+    /// If the call fails.
+    /// # TODO
+    /// Add examples.
+    async fn get_storage_at(&self, address: &H160, slot: H256, block: BlockTag) -> Result<U256>;
 
     /// Get the balance of an account.
     /// This function should be called after `start`.
@@ -219,6 +245,28 @@ pub trait EthereumLightClient: Send + Sync {
         full_tx: bool,
     ) -> Result<Option<ExecutionBlock>>;
 
+    // /// Get logs (blockchain events), based on the given filter.
+    // /// # Arguments
+    // /// * `from_block` - Either the hex value of a block number OR block tags.
+    // /// * `to_block` - Either the hex value of a block number OR block tags (e.g. 'latest').
+    // /// * `address` - Address from which logs come from. (e.g. 'latest').
+    // /// * `topics` - Array of 32 Bytes DATA topics. Topics are order-dependent. Each topic can also be an array of DATA with "or" options.
+    // /// * `block_hash` - Equivalent to using from_block = to_block. If provided, neither to_block or from_block are allowed.
+    // /// # Returns
+    // /// Vector of logs, matching the given filter params.
+    // /// # Errors
+    // /// If the call fails, or if there are more than 5 logs.
+    // /// # TODO
+    // /// Add examples.
+    // async fn get_logs(
+    //     &self,
+    //     from_block: &Option<String>,
+    //     to_block: &Option<String>,
+    //     address: &Option<String>,
+    //     topics: &Option<Vec<String>>,
+    //     block_hash: &Option<String>,
+    // ) -> Result<Vec<Log>>;
+
     /// Get logs (blockchain events), based on the given filter.
     /// # Arguments
     /// * `from_block` - Either the hex value of a block number OR block tags.
@@ -232,14 +280,7 @@ pub trait EthereumLightClient: Send + Sync {
     /// If the call fails, or if there are more than 5 logs.
     /// # TODO
     /// Add examples.
-    async fn get_logs(
-        &self,
-        from_block: &Option<String>,
-        to_block: &Option<String>,
-        address: &Option<String>,
-        topics: &Option<Vec<String>>,
-        block_hash: &Option<String>,
-    ) -> Result<Vec<Log>>;
+    async fn get_logs(&self, filter: Filter) -> Result<Vec<Log>>;
 
     async fn starknet_last_proven_block(&self) -> Result<U256>;
     async fn starknet_state_root(&self) -> Result<U256>;

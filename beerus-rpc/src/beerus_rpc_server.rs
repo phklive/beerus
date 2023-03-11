@@ -1,6 +1,6 @@
 use beerus_core::lightclient::beerus::BeerusLightClient;
 use ethers::{
-    types::{Address, SyncingStatus},
+    types::{Address, Filter, Log, SyncingStatus, TransactionReceipt, H256},
     utils,
 };
 use helios::types::{BlockTag, CallOpts, ExecutionBlock};
@@ -83,23 +83,22 @@ trait BeerusApi {
     #[method(name = "eth_call")]
     async fn eth_call(&self, opts: CallOpts, block_tag: &str) -> Result<String>;
 
-    // // Returns an array of all logs matching filter with given id
-    // #[method(name = "eth_getLogs")]
-    // async fn eth_get_logs(&self, filter: Filter) -> Result<Vec<Log>>;
+    // Returns an array of all logs matching filter with given id
+    #[method(name = "eth_getLogs")]
+    async fn eth_get_logs(&self, filter: Filter) -> Result<Vec<Log>>;
 
-    // // Returns the value from a storage position at given address
-    // #[method(name = "eth_getStorageAt")]
-    // async fn eth_get_storage_at(
-    //     &self,
-    //     address: &str,
-    //     slot: H256,
-    //     block_tag: &str,
-    // ) -> Result<String>;
+    // Returns the value from a storage position at given address
+    #[method(name = "eth_getStorageAt")]
+    async fn eth_get_storage_at(
+        &self,
+        address: &str,
+        slot: H256,
+        block_tag: &str,
+    ) -> Result<String>;
 
-    // TODO: Impliment
-    // // Returns the receipt of a transaction by transaction hash
-    // #[method(name = "eth_getTransactionReceipt")]
-    // async fn eth_get_transaction_receipt(&self, hash: &str) -> Result<Option<TransactionReceipt>>;
+    // Returns the receipt of a transaction by transaction hash
+    #[method(name = "eth_getTransactionReceipt")]
+    async fn eth_get_transaction_receipt(&self, hash: &str) -> Result<Option<TransactionReceipt>>;
 
     // Returns an object with data about the sync status or false
     #[method(name = "eth_syncing")]
@@ -205,28 +204,57 @@ impl BeerusApiServer for BeerusRpc {
         Ok(balance_in_eth)
     }
 
-    // TODO: impliment on ethereum lightclient
-    // async fn eth_get_transaction_receipt(&self, hash: &str) -> Result<Option<TransactionReceipt>> {
-    //     let tx_receipt = self._beerus.ethereum_lightclient.read().await
-    // }
+    async fn eth_get_transaction_receipt(
+        &self,
+        tx_hash: &str,
+    ) -> Result<Option<TransactionReceipt>> {
+        let hash = H256::from_str(tx_hash).unwrap();
 
-    // async fn eth_get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
-    //     let logs = self._beerus.ethereum_lightclient.read().await.get_logs(from_block, to_block, &filter.address, &filter.topics)
-    // }
+        let tx_receipt = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_transaction_receipt(&hash)
+            .await
+            .unwrap();
+        Ok(tx_receipt)
+    }
 
-    // async fn eth_get_storage_at(
-    //     &self,
-    //     address: &str,
-    //     slot: H256,
-    //     block_tag: &str,
-    // ) -> Result<String> {
-    //    // Parse the Ethereum address.
-    //    let addr = Address::from_str(address).unwrap();
-    //    // Parse block_tag
-    //    let block_tag: String = serde_json::to_string(&block_tag).unwrap();
-    //    let block_tag: BlockTag = serde_json::from_str(block_tag.as_str()).unwrap();
-    //    let storage = self._beerus.ethereum_lightclient.read().await.get_st
-    // }
+    async fn eth_get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
+        let logs = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_logs(filter)
+            .await
+            .unwrap();
+        Ok(logs)
+    }
+
+    async fn eth_get_storage_at(
+        &self,
+        address: &str,
+        slot: H256,
+        block_tag: &str,
+    ) -> Result<String> {
+        // Parse the Ethereum address.
+        let addr = Address::from_str(address).unwrap();
+        // Parse block_tag
+        let block_tag: String = serde_json::to_string(&block_tag).unwrap();
+        let block_tag: BlockTag = serde_json::from_str(block_tag.as_str()).unwrap();
+        let storage = self
+            ._beerus
+            .ethereum_lightclient
+            .read()
+            .await
+            .get_storage_at(&addr, slot, block_tag)
+            .await
+            .unwrap()
+            .to_string();
+        Ok(storage)
+    }
 
     async fn eth_send_raw_transaction(&self, bytes: &str) -> Result<String> {
         // Parse bytes

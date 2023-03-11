@@ -1,7 +1,7 @@
 use crate::model::CommandResponse;
 use beerus_core::lightclient::beerus::BeerusLightClient;
 use core::str::FromStr;
-use ethers::types::U256;
+use ethers::types::{Filter, U256};
 use ethers::utils::hex;
 use ethers::{
     types::{Address, H256},
@@ -394,19 +394,30 @@ pub async fn query_block_by_number(
         .await?;
     Ok(CommandResponse::EthereumQueryBlockByNumber(block))
 }
-pub async fn query_logs(
-    beerus: BeerusLightClient,
-    from_block: &Option<String>,
-    to_block: &Option<String>,
-    address: &Option<String>,
-    topics: &Option<Vec<String>>,
-    block_hash: &Option<String>,
-) -> Result<CommandResponse> {
+
+// pub async fn query_logs(
+//     beerus: BeerusLightClient,
+//     from_block: &Option<String>,
+//     to_block: &Option<String>,
+//     address: &Option<String>,
+//     topics: &Option<Vec<String>>,
+//     block_hash: &Option<String>,
+// ) -> Result<CommandResponse> {
+//     let logs = beerus
+//         .ethereum_lightclient
+//         .read()
+//         .await
+//         .get_logs(from_block, to_block, address, topics, block_hash)
+//         .await?;
+//     Ok(CommandResponse::EthereumQueryLogs(logs))
+// }
+
+pub async fn query_logs(beerus: BeerusLightClient, filter: Filter) -> Result<CommandResponse> {
     let logs = beerus
         .ethereum_lightclient
         .read()
         .await
-        .get_logs(from_block, to_block, address, topics, block_hash)
+        .get_logs(filter)
         .await?;
     Ok(CommandResponse::EthereumQueryLogs(logs))
 }
